@@ -1,7 +1,6 @@
 '
-Script: S02b
-for each patient,
-combine coding regions from their samples 
+Script: S01b
+for each patient, combine coding regions from their samples 
 --> those merged regions will be used as bed file to filter mutations
 '
 
@@ -32,6 +31,7 @@ merged_segs = function(segs) { # segs is the a vector of directories to segments
     rename(chrom = seqnames,
            chromStart = start,
            chromEnd = end) %>% 
+    filter(!grepl(pattern = "_",x = chrom)) %>% 
     select(chrom,chromStart,chromEnd)
   
   return(out)
@@ -42,19 +42,19 @@ merged_segs = function(segs) { # segs is the a vector of directories to segments
 args = commandArgs(trailingOnly = T)
 
 # master file, or list of DNA libs to be processed for each patient
-# mf = "/mnt/projects/lailhh/workspace/Metastasis_Feb2020/S03_PyClone/pyclone_masterfile.csv"
+# mf = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/pyclone_masterfile.csv"
 mf = args[1]
 mf = read_csv(mf)
 
 # working directory
-# wdir = "/mnt/projects/lailhh/workspace/Metastasis_Feb2020/S03_PyClone/output/output_20201008/S01_prepareInputs/"
+# wdir = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/d20210318/"
 wdir = args[2]
 
-# directory storing processed sequenza outputs (i.e. copy-neutral regions) 
-idir = paste0(wdir,"/S02a_mutect_CodingRegs_perSam/")
+# directory storing bed files (SNP and coding muts) of each sample
+idir = paste0(wdir,"/S01a_mutect_CodingRegs_perSam/")
 
-# output directory to store copy neutral regions of each patient (i.e. by intersecting copy-neutral regions of all samples of the patient) 
-odir = paste0(wdir,"/S02b_mutect_CodingRegs_perPat/")
+# output directory to store bed files (SNP and coding muts) of each patient
+odir = paste0(wdir,"/S01b_mutect_CodingRegs_perPat/")
 system(paste0("mkdir -p ",odir))
 
 

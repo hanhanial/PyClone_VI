@@ -1,5 +1,5 @@
 '
-Script: S02a
+Script: S01a
 get bed file of coding regions using MAF files (funcotator results)
 --> from MAF files: 
 for each sample, keep mutations with coding definition
@@ -15,23 +15,23 @@ suppressMessages(library(doMC))
 args = commandArgs(trailingOnly = T)
 
 # master file
-# mf = "/mnt/projects/lailhh/workspace/Metastasis_Feb2020/S03_PyClone/pyclone_masterfile.csv"
+# mf = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/pyclone_masterfile.csv"
 mf = args[1]
 mf = read_csv(mf)
 
 # working directory
-# wdir = "/mnt/projects/lailhh/workspace/Metastasis_Feb2020/S03_PyClone/output/output_20201008/S01_prepareInputs/"
+# wdir = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/d20210318/"
 wdir = args[2]
 
 # output directory to store DNA libs' bed files of coding regions from oncotator
-odir = paste0(wdir,"/S02a_mutect_CodingRegs_perSam/")
+odir = paste0(wdir,"/S01a_mutect_CodingRegs_perSam/")
 system(paste0("mkdir -p ",odir))
 
 mf = mf %>% 
   filter(!is.na(funcotator_dir))
 
-script1 = "/mnt/projects/lailhh/workspace/pipelines/PyClone/PLANET_Pyclone_pipeline/scripts/S01_prepareInputs/S02a_mutect_SNPs_perSam.sh"
-script2 = "/mnt/projects/lailhh/workspace/pipelines/PyClone/PLANET_Pyclone_pipeline/scripts/S01_prepareInputs/S02a_mutect_CodingRegs_perSam.sh"
+script1 = "/mnt/projects/lailhh/workspace/pipelines/PyClone/PyClone_VI/scripts/helper_scripts/mutect_SNPs_perSam.sh"
+script2 = "/mnt/projects/lailhh/workspace/pipelines/PyClone/PyClone_VI/scripts/helper_scripts/mutect_CodingRegs_perSam.sh"
 
 
 registerDoMC(10)

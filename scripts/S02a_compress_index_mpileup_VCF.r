@@ -1,5 +1,5 @@
 '
-Script: S03a
+Script: S02a
 remove mutations with invalid chromosomes (i.e. those containing "_" in chromosome names) in mpileup VCF,
 sort the VCF file,
 compress the sorted file, then
@@ -11,7 +11,7 @@ suppressMessages(library(tidyverse))
 args = commandArgs(trailingOnly = T)
 
 # master file
-# mf = "/mnt/projects/lailhh/workspace/Metastasis_Feb2020/S03_PyClone/pyclone_masterfile.csv"
+# mf = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/pyclone_masterfile.csv"
 mf = args[1]
 mf = read_csv(mf)
 
@@ -19,14 +19,14 @@ mpileups = mf %>%
   filter(!is.na(mpileup_dir) & Sample_type=="Normal")
 
 # working directory
-# wdir = "/mnt/projects/lailhh/workspace/Metastasis_Feb2020/S03_PyClone/output/output_20201008/S01_prepareInputs/"
+# wdir = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/d20210318/"
 wdir = args[2]
 
 # input directory - to keep only SNPs
-idir = paste0(wdir,"/S02b_mutect_CodingRegs_perPat/")
+idir = paste0(wdir,"/S01b_mutect_CodingRegs_perPat/")
   
 # output directory
-outp = paste0(wdir,"/S03a_compress_index_mpileup_VCF/")
+outp = paste0(wdir,"/S02a_compress_index_mpileup_VCF/")
 system(paste0("mkdir -p ",outp))
 
 for (i in 1:nrow(mpileups)) 
@@ -42,7 +42,7 @@ for (i in 1:nrow(mpileups))
   system(paste0("mkdir -p ",odir))
   
   #### remove mutations with invalid chromosomes (i.e. those containing "_" in chromosome names)
-  cmd = paste0("/mnt/projects/lailhh/workspace/pipelines/PyClone/PLANET_Pyclone_pipeline/scripts/S01_prepareInputs/remove_invalid_chr.sh ",
+  cmd = paste0("/mnt/projects/lailhh/workspace/pipelines/PyClone/PyClone_VI/scripts/helper_scripts/remove_invalid_chr.sh ",
                mpileup_file," ",odir,"/",dna_lib,"_cleaned_muts.vcf")
   system(cmd)
   
@@ -83,7 +83,7 @@ for (i in 1:nrow(mpileups))
   #### keep only SNPs
   snps_bed = paste0(idir,"/",pat,"_SNPSegments.bed")
   
-  # keep mutations in coding regions
+  # keep SNP mutations 
   vcftools_cmd = paste0("vcftools --gzvcf ",odir,"/",dna_lib,".vcf.gz",
                         " --recode --recode-INFO-all --bed ",snps_bed,
                         " --out ",odir,"/SNPs")

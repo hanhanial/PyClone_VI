@@ -1,5 +1,5 @@
 '
-Script: S03b
+Script: S02b
 from mpileup VCF and coding bed file (from mutect MAF)
 use vcftools to separate mutations into 2 groups:
 - mutations in coding regions 
@@ -12,22 +12,22 @@ suppressMessages(library(tidyverse))
 args = commandArgs(trailingOnly = T)
 
 # master file
-# mf = "/mnt/projects/lailhh/workspace/Metastasis_Feb2020/S03_PyClone/pyclone_masterfile.csv"
+# mf = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/pyclone_masterfile.csv"
 mf = args[1]
 mf = read_csv(mf)
 
 # working directory
-# wdir = "/mnt/projects/lailhh/workspace/Metastasis_Feb2020/S03_PyClone/output/output_20201008/S01_prepareInputs/"
+# wdir = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/d20210318/"
 wdir = args[2]
 
 # input directory
-idir = paste0(wdir,"/S03a_compress_index_mpileup_VCF/")
+idir = paste0(wdir,"/S02a_compress_index_mpileup_VCF/")
 
 # directory to bed files (i.e. lists of merged coding regions) of all patients
-bed_dir = paste0(wdir,"/S02b_mutect_CodingRegs_perPat/")
+bed_dir = paste0(wdir,"/S01b_mutect_CodingRegs_perPat/")
 
 # output directory to store mpileup's mutations in coding/non-coding regions
-outp = paste0(wdir,"/S03b_mpileup_CodingRegs/")
+outp = paste0(wdir,"/S02b_mpileup_CodingRegs/")
 system(paste0("mkdir -p ",outp))
 
 mpileups = list.files(idir)
@@ -90,7 +90,7 @@ for (i in 1:nrow(mpileups))
   system(paste0("bcftools index ",odir,"/mpileup_Noncoding.vcf.gz"))
   
   ####### number of coding/noncoding muts
-  cmd = paste0("/mnt/projects/lailhh/workspace/pipelines/PyClone/PLANET_Pyclone_pipeline/scripts/S01_prepareInputs/count_VCF_coding-muts.sh ",
+  cmd = paste0("/mnt/projects/lailhh/workspace/pipelines/PyClone/PyClone_VI/scripts/helper_scripts/count_VCF_coding-muts.sh ",
                dna_lib," ",outp," number_of_Coding-SNP.tsv")
   system(cmd)
   
