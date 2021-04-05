@@ -11,16 +11,21 @@ suppressMessages(library(tidyverse))
 args = commandArgs(trailingOnly = T)
 
 # master file
-# mf = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/pyclone_masterfile.csv"
 mf = args[1]
+
+# working directory
+wdir = args[2]
+
+'
+mf = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/pyclone_masterfile.csv"
+wdir = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/d20210318/"
+'
+
 mf = read_csv(mf)
 
 mpileups = mf %>% 
   filter(!is.na(mpileup_dir) & Sample_type=="Normal")
 
-# working directory
-# wdir = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/d20210318/"
-wdir = args[2]
 
 # input directory - to keep only SNPs
 idir = paste0(wdir,"/S01b_mutect_CodingRegs_perPat/")

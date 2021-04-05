@@ -42,13 +42,17 @@ merged_segs = function(segs) { # segs is the a vector of directories to segments
 args = commandArgs(trailingOnly = T)
 
 # master file, or list of DNA libs to be processed for each patient
-# mf = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/pyclone_masterfile.csv"
 mf = args[1]
-mf = read_csv(mf)
 
 # working directory
-# wdir = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/d20210318/"
 wdir = args[2]
+
+'
+mf = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/pyclone_masterfile.csv"
+wdir = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/d20210318/"
+'
+
+mf = read_csv(mf)
 
 # directory storing bed files (SNP and coding muts) of each sample
 idir = paste0(wdir,"/S01a_mutect_CodingRegs_perSam/")

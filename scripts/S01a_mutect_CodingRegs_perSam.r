@@ -15,13 +15,17 @@ suppressMessages(library(doMC))
 args = commandArgs(trailingOnly = T)
 
 # master file
-# mf = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/pyclone_masterfile.csv"
 mf = args[1]
-mf = read_csv(mf)
 
 # working directory
-# wdir = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/d20210318/"
 wdir = args[2]
+
+'
+mf = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/pyclone_masterfile.csv"
+wdir = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/d20210318/"
+' 
+
+mf = read_csv(mf)
 
 # output directory to store DNA libs' bed files of coding regions from oncotator
 odir = paste0(wdir,"/S01a_mutect_CodingRegs_perSam/")

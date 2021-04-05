@@ -4,7 +4,6 @@ source activate pyclone-vi
 
 pat_id=$1
 inp=$2
-wdir=$3
 
 mkdir -p "$pat_id"
 

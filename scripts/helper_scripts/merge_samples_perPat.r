@@ -32,7 +32,16 @@ dat = lapply(pat_files, function(x) {
 })
 
 dat1 = Reduce(f = bind_rows,x = dat)
-# dat1[duplicated(dat1),]
+
+# duplicated muts
+duplicated_muts = dat1[duplicated(dat1),] %>% 
+  select(sample_id,mutation_id,everything()) %>% 
+  arrange(sample_id,mutation_id)
+if (nrow(duplicated_muts)>0) {
+  write_tsv(duplicated_muts,paste0(pat_id,"_duplicated-mutations.tsv"))
+}
+
+
 
 # get tumor content
 dat1 = left_join(dat1,purity)

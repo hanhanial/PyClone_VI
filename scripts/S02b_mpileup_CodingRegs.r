@@ -12,13 +12,17 @@ suppressMessages(library(tidyverse))
 args = commandArgs(trailingOnly = T)
 
 # master file
-# mf = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/pyclone_masterfile.csv"
 mf = args[1]
-mf = read_csv(mf)
 
 # working directory
-# wdir = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/d20210318/"
 wdir = args[2]
+
+'
+mf = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/pyclone_masterfile.csv"
+wdir = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/d20210318/"
+'
+
+mf = read_csv(mf)
 
 # input directory
 idir = paste0(wdir,"/S02a_compress_index_mpileup_VCF/")
@@ -63,15 +67,12 @@ for (i in 1:nrow(mpileups))
                         " --out ",odir,"/coding")
   system(vcftools_cmd)
   
-  # rename
-  system(paste0("mv ",odir,"/coding.recode.vcf ",odir,"/mpileup_Coding.vcf"))
+  # keep header row and unique rows with :AD" allelic depth
+  system(paste0("cat ",odir,"/coding.recode.vcf | sort | uniq -u | grep -F '#CHROM' > ",odir,"/mpileup_Coding.vcf"))
+  system(paste0("cat ",odir,"/coding.recode.vcf | sort | uniq -u | grep :AD >> ",odir,"/mpileup_Coding.vcf"))
   
-  # compress
-  system(paste0("bgzip -c ",odir,"/mpileup_Coding.vcf > ",odir,"/mpileup_Coding.vcf.gz"))
-  
-  # index files
-  system(paste0("bcftools index ",odir,"/mpileup_Coding.vcf.gz"))
-
+  # remove original output
+  system(paste0("rm ",odir,"/coding.recode.vcf"))
     
   ###### SNPs in non-coding regions 
   # keep mutations in coding regions
@@ -80,15 +81,13 @@ for (i in 1:nrow(mpileups))
                         " --out ",odir,"/noncoding")
   system(vcftools_cmd)
   
-  # rename
-  system(paste0("mv ",odir,"/noncoding.recode.vcf ",odir,"/mpileup_Noncoding.vcf"))
+  # keep header row and unique rows with ":AD" allelic depth
+  system(paste0("cat ",odir,"/noncoding.recode.vcf | sort | uniq -u | grep -F '#CHROM' > ",odir,"/mpileup_Noncoding.vcf"))
+  system(paste0("cat ",odir,"/noncoding.recode.vcf | sort | uniq -u | grep :AD >> ",odir,"/mpileup_Noncoding.vcf"))
   
-  # compress
-  system(paste0("bgzip -c ",odir,"/mpileup_Noncoding.vcf > ",odir,"/mpileup_Noncoding.vcf.gz"))
-  
-  # index files
-  system(paste0("bcftools index ",odir,"/mpileup_Noncoding.vcf.gz"))
-  
+  # remove original output
+  system(paste0("rm ",odir,"/noncoding.recode.vcf"))
+
   ####### number of coding/noncoding muts
   cmd = paste0("/mnt/projects/lailhh/workspace/pipelines/PyClone/PyClone_VI/scripts/helper_scripts/count_VCF_coding-muts.sh ",
                dna_lib," ",outp," number_of_Coding-SNP.tsv")
