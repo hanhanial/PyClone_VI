@@ -1,11 +1,11 @@
 // working directory
-params.wdir = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/d20210318/S05_pyclone"
+params.wdir = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/d20210429/S04_pyclone"
 
 // directory to helper scripts
 params.script_dir = "/mnt/projects/lailhh/workspace/pipelines/PyClone/PyClone_VI/scripts/helper_scripts"
 
 // number of random muts to be selected
-params.num_mut = 3000
+params.num_mut = "all"
 
 // seed for randomly selecting muts
 params.random_seed = 1234
@@ -17,7 +17,7 @@ params.sequenzadir = "/mnt/projects/zhaiww1/planet/data_storage/DNA_data/hg38/se
 params.mutectdir = "/mnt/projects/zhaiww1/planet/data_storage/DNA_data/hg38/mutect2_results"
 
 // list of VCF files
-params.vcfList = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/d20210318/S03_list_of_vcfs.csv"
+params.vcfList = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/d20210429/S03_list_of_vcfs.csv"
 
 // version of citup
 params.citup_type = "iter"
@@ -115,7 +115,7 @@ process pyclone_input {
 
 
 process run_pyclone {
-  maxForks 25
+  maxForks 50
   conda '/home/lailhh/miniconda3/envs/pyclone-vi'
   clusterOptions='-V -pe OpenMP 1 -l mem_free=20g,h_rt=96:00:00'
   publishDir 'pyclone_results', mode: 'copy'
@@ -134,16 +134,16 @@ process run_pyclone {
 
 
 
-/*
+
 process run_citup {
     maxForks 25
-    conda '/home/lailhh/miniconda3/envs/citup'
+    conda '/mnt/projects/zhaiww1/liver_cancer_data/shared_group_folder/tools/citup/citup'
     clusterOptions='-V -pe OpenMP 24 -l mem_free=20g,h_rt=48:00:00'
     errorStrategy 'ignore'
-    publishDir "citup_results/${pat_id}", mode: 'copy'
+    publishDir "citup_results/${Unified_ID}", mode: 'copy'
 
     input:
-    set Unified_ID, file(pat_folder) from pyclone_results_ch
+    set Unified_ID, file(pat_pyclone) from pyclone_results_ch
 
     output:
     set Unified_ID, file("${Unified_ID}_*.*") into citup_results_ch
@@ -183,7 +183,4 @@ process done {
     touch ${Unified_ID}.done
     """
 }
-
-
-*/
 

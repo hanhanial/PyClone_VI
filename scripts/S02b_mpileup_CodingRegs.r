@@ -1,5 +1,6 @@
 '
 Script: S02b
+(run this in R cluster)
 from mpileup VCF and coding bed file (from mutect MAF)
 use vcftools to separate mutations into 2 groups:
 - mutations in coding regions 
@@ -19,7 +20,7 @@ wdir = args[2]
 
 '
 mf = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/pyclone_masterfile.csv"
-wdir = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/d20210318/"
+wdir = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/d20210429/"
 '
 
 mf = read_csv(mf)

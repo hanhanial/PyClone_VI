@@ -49,7 +49,7 @@ wdir = args[2]
 
 '
 mf = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/pyclone_masterfile.csv"
-wdir = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/d20210318/"
+wdir = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/d20210429/"
 '
 
 mf = read_csv(mf)

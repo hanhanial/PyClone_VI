@@ -1,11 +1,11 @@
 #!/bin/bash
 #$ -V
 #$ -pe OpenMP 4
-#$ -l mem_free=4g,h_rt=48:00:00
+#$ -l mem_free=4g,h_rt=120:00:00
 #$ -cwd
 
 # change accordingly
-wdir=/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/d20210318/
+wdir=/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/d20210429/
 vcfList=$wdir/S03_list_of_vcfs.csv
 script_dir=/mnt/projects/lailhh/workspace/pipelines/PyClone/PyClone_VI/scripts/helper_scripts
 sequenzadir=/mnt/projects/zhaiww1/planet/data_storage/DNA_data/hg38/sequenza_results/cnvkit

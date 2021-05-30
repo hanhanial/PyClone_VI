@@ -1,5 +1,6 @@
 '
 Script: S02a
+(run this in R cluster)
 remove mutations with invalid chromosomes (i.e. those containing "_" in chromosome names) in mpileup VCF,
 sort the VCF file,
 compress the sorted file, then
@@ -18,7 +19,7 @@ wdir = args[2]
 
 '
 mf = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/pyclone_masterfile.csv"
-wdir = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/d20210318/"
+wdir = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/d20210429/"
 '
 
 mf = read_csv(mf)

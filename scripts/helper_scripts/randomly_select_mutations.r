@@ -12,9 +12,8 @@ args = commandArgs(trailingOnly = T)
 # patient ID
 pat = args[1]
 
-# number of muts to be input to pyclone
+# either "all", or some number of muts to be input to pyclone
 num_muts = args[2]
-num_muts = as.numeric(num_muts)
 
 # random seed for selection mutations
 random_seed = args[3]
@@ -28,12 +27,17 @@ idir = paste0(wdir,"/assign_CN/",pat,"_pyclone_input/")
 
 '
 pat = "E001"
-num_muts = 3000
+num_muts = "all"
 random_seed = 123
 wdir = "/mnt/projects/lailhh/workspace/pipelines/PyClone/testing/d20210318//S04_pyclone"
 idir = paste0(wdir,"/assign_CN/",pat,"_pyclone_input/")
 
 '
+
+# if num_muts!="all", make sure it's numeric
+if (num_muts!="all") {
+  num_muts = as.numeric(num_muts)
+}
 
 # output dir 
 odir = pat
@@ -41,6 +45,8 @@ system(paste0("mkdir -p ",odir))
 
 mut_files = list.files(idir)
 
+
+###### patient's mutation files ###### 
 # patient's coding files
 coding_files = mut_files[startsWith(x = mut_files,prefix = "coding")]
 coding_files = tibble(sample_id = gsub(pattern = "coding_",replacement = "",x = coding_files),
@@ -55,7 +61,7 @@ coding_files = lapply(1:nrow(coding_files), function(x) {
 # patient's non-coding files
 noncoding_files = mut_files[startsWith(x = mut_files,prefix = "noncoding")]
 noncoding_files = tibble(sample_id = gsub(pattern = "noncoding_",replacement = "",x = noncoding_files),
-                      file = paste0(idir,noncoding_files)) %>% 
+                         file = paste0(idir,noncoding_files)) %>% 
   mutate(sample_id = gsub(pattern = ".tsv",replacement = "",x = sample_id))
 noncoding_files = lapply(1:nrow(noncoding_files), function(x) {
   dat = read_tsv(noncoding_files$file[x]) %>% 
@@ -65,6 +71,7 @@ noncoding_files = lapply(1:nrow(noncoding_files), function(x) {
 
 
 
+###### list of unique coding/noncoding mutations ###### 
 # list of unique coding muts
 coding_muts = lapply(coding_files, function(x) {
   return(x$mutation_id)
@@ -79,38 +86,49 @@ noncoding_muts = lapply(noncoding_files, function(x) {
 noncoding_muts = unique(Reduce(f = c,x = noncoding_muts))
 
 
-# randomly pick coding muts 
-# - if length(coding_muts)<=num_muts, use all coding muts
-# - otherwise (i.e. more coding muts than num muts to be selected), randomly select num_muts from coding_muts
-if (num_muts>=length(coding_muts)) {
+
+###### random selection of mutations ###### 
+if (num_muts=="all") { # if we use all mutations
   selected_coding_muts = coding_muts
-} else { 
-  set.seed(random_seed)
-  selected_coding_muts = sample(x = coding_muts,size = num_muts,replace = F) }
-
-
-# get the list of all selected muts 
-# - if we have enough coding muts (i.e. length(selected_coding_muts)>=num_muts), then all selected muts will be coding muts
-# - otherwise, use noncoding_muts to top up (num_muts-length(coding_muts)) muts 
-if (length(selected_coding_muts)>=num_muts) {
-  selected_muts = selected_coding_muts
-} else {
-  num_selected_noncoding_muts = num_muts-length(coding_muts)
+  selected_noncoding_muts = noncoding_muts
   
-  if (num_selected_noncoding_muts>=length(noncoding_muts)) {
-    # if we dont have enough non-coding muts, use all of them
-    selected_noncoding_muts = noncoding_muts
-  } else {
-    # else randomly select num_selected_noncoding_muts muts from noncoding_muts
+} else { # num_muts is a numeric value
+  # randomly pick coding muts 
+  # - if length(coding_muts)<=num_muts, use all coding muts
+  # - otherwise (i.e. more coding muts than num muts to be selected), randomly select num_muts from coding_muts
+  if (num_muts>=length(coding_muts)) {
+    selected_coding_muts = coding_muts
+  } else { 
     set.seed(random_seed)
-    selected_noncoding_muts = sample(x = noncoding_muts,size = num_selected_noncoding_muts,replace = F)
-  }
+    selected_coding_muts = sample(x = coding_muts,size = num_muts,replace = F) }
   
-  selected_muts = c(selected_coding_muts,selected_noncoding_muts)
+  
+  # get the list of all selected muts 
+  # - if we have enough coding muts (i.e. length(selected_coding_muts)>=num_muts), then all selected muts will be coding muts
+  # - otherwise, use noncoding_muts to top up (num_muts-length(coding_muts)) muts 
+  if (length(selected_coding_muts)>=num_muts) {
+    selected_muts = selected_coding_muts
+  } else {
+    num_selected_noncoding_muts = num_muts-length(coding_muts)
+    
+    if (num_selected_noncoding_muts>=length(noncoding_muts)) {
+      # if we dont have enough non-coding muts, use all of them
+      selected_noncoding_muts = noncoding_muts
+    } else {
+      # else randomly select num_selected_noncoding_muts muts from noncoding_muts
+      set.seed(random_seed)
+      selected_noncoding_muts = sample(x = noncoding_muts,size = num_selected_noncoding_muts,replace = F)
+    }
+    
+  }
 }
 
+# combine to get the list of mutations to be input to PyClone
+selected_muts = c(selected_coding_muts,selected_noncoding_muts)
 
-# pyclone input
+
+
+###### pyclone input ###### 
 coding_inp = lapply(coding_files, function(x) {
   x %>% filter(mutation_id %in% selected_muts)
 })
@@ -133,7 +151,7 @@ if (nrow(duplicated_muts)>0) {
 }
 
 
-# Purity file
+###### Purity file ###### 
 purity = paste0(wdir,"/seg_purity/",pat,".purity")
 purity = read_tsv(purity)
 purity = purity %>% 
@@ -159,10 +177,10 @@ pat_inp1 = pat_inp %>%
   ungroup()
 write_tsv(pat_inp1,paste0(pat,"/",pat,".tsv"))
 
+
 # output number of selected coding/noncoding muts
 pat_mut_count = tibble(Unified_ID = pat,
                        num_muts = length(selected_muts),
                        num_coding = sum(coding_muts %in% selected_muts),
                        num_noncoding = sum(noncoding_muts %in% selected_muts))
 write_tsv(pat_mut_count,paste0(pat,"/num_muts.tsv"))
-                                              
