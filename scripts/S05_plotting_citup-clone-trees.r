@@ -9,13 +9,13 @@ library(ggforce)
 
 source("/mnt/projects/lailhh/workspace/pipelines/PyClone/PyClone_VI/scripts/helper_scripts/citup-clone-trees.r")
 
-
+'
 # master file
 mf = "/mnt/projects/lailhh/workspace/Metastasis_Feb2020/S21_PyClone_VI/d20210622/S01_input_masterfile.csv"
 
 # working directory
 wdir = "/mnt/projects/lailhh/workspace/Metastasis_Feb2020/S21_PyClone_VI/d20210622/S02_PyClone_VI/output/"
-
+'
 
 mf = read_csv(mf)
 mf = mf %>% 
@@ -24,10 +24,6 @@ mf = mf %>%
 # create output directory
 odir = paste0(wdir,"/S05_citup-clone-trees/")
 system(paste0("mkdir -p ",odir))
-
-
-# Load drivers for filtering
-drivers = load_drivers()
 
 
 citup_dir = list.files(paste0(wdir,"/S04_pyclone/citup_results"))
