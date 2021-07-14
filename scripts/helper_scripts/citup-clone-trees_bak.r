@@ -15,58 +15,13 @@ c25 = c("dodgerblue2","#E31A1C", # red
         "darkturquoise","green1","yellow4","yellow3",
         "darkorange4","brown")
 
-
-# Coding definition (non-syn including silent) for HG38
-coding_def = read_tsv("/mnt/projects/lailhh/workspace/pipelines/PyClone/PyClone_VI/reference/HG38_coding_definitions.tsv",col_names = F)$X1
-
-
-
-# load all drivers
-load_drivers = function() {
-  ref_dir = "/mnt/projects/lailhh/workspace/pipelines/PyClone/PyClone_VI/reference/driver-mutation_lists/"
-  
-  # Use known drivers list
-  hccdrivers = read.table(paste0(ref_dir,"concensus_1349_koreanindels.txt"),stringsAsFactors = F) 
-  
-  # TCGA
-  tcgadrivers = read_tsv(paste0(ref_dir,"tcga_2018_driver_list.txt"), col_types = cols()) %>%
-    filter(Cancer %in% c("LIHC", "PANCAN"))
-  
-  # CGC drivers
-  cgcdrivers = read_csv(paste0(ref_dir,"cancer_gene_census.csv"), col_types=cols()) 
-  # Exclude fusion, promoter and translocation (only) drivers. Select somatic only
-  cgcdrivers = cgcdrivers %>% filter(str_detect(`Mutation Types`, "Mis|N|F|D|S|O|A") & Somatic == "yes")
-  
-  # signalling pathway
-  signalling = read_tsv(paste0(ref_dir,"TCGA_2018_signalling_pathways.txt"), col_types=cols())
-  
-  # Cancermine. Gives priority to NSCLC
-  priority_cancermine = c("hepatocellular carcinoma","liver cancer","liver carcinoma","liver angiosarcoma")
-  cancermine = read_tsv(paste0(ref_dir,"cancermine_collated_2018-10-17.tsv"), col_types=cols()) %>%
-    filter(grepl("liver|hepatocellular", cancer_normalized)) 
-  cancermine$cancer_normalized = factor(cancermine$cancer_normalized, levels=priority_cancermine)
-  cancermine = cancermine %>% arrange(cancer_normalized) %>%
-    group_by(gene_normalized) %>% mutate(rnum = row_number()) %>% 
-    filter(rnum==1) %>% select(-rnum)
-  
-  # Drivers to subset
-  all_drivers = c(hccdrivers$V1, 
-                  tcgadrivers$Gene, cgcdrivers$`Gene Symbol`,
-                  signalling$Hugo_Symbol,
-                  cancermine$gene_normalized) %>% unique
-  
-  return(list(all_drivers = all_drivers,
-              hccdrivers = hccdrivers,
-              tcgadrivers = tcgadrivers,
-              cgcdrivers = cgcdrivers,
-              signalling = signalling,
-              cancermine = cancermine))
-}
-
-
-
-
-
+# Coding definition (non-syn including silent) for TCGA MAF format
+coding_def = c("De_novo_Start_InFrame", "De_novo_Start_OutOfFrame",
+               "Start_Codon_Del", "Start_Codon_SNP", "Frame_Shift_Del",
+               "Frame_Shift_Ins", "In_Frame_Del", "In_Frame_Ins",
+               "Missense_Mutation", "Nonsense_Mutation", "Nonstop_Mutation",
+               "Silent", "Splice_Site", "Start_Codon_Ins",
+               "Translation_Start_Site")
 
 
 '
@@ -75,11 +30,8 @@ load_drivers = function() {
 - mf = master file, which maps DNA_lib to Tumor
 - nPoints = number of segments used to draw clonal decomposition for each tumor sample
 higher nPoints --> more defined decomposition, but also output much bigger size file/pdf
-- vaf = VAF (from funcotator MAF) of the patient
-- drivers = list of drivers to annotate
 '
-clone_tree = function(patient,citup_dir,mf,nPoints,
-                      vaf,drivers = "") {
+clone_tree = function(patient,citup_dir,mf,nPoints) {
   
   #### Clone tree of the patient ####
   # Read in the assignment of clusters of mutations to different clone IDs by citup
@@ -95,10 +47,9 @@ clone_tree = function(patient,citup_dir,mf,nPoints,
   mutation = read.delim2(list.files(path=citup_dir, 
                                     pattern=".*cluster_filtered.*.tsv$", 
                                     recursive = FALSE, full.names = TRUE))
-  # map cluster ID to clone ID
+  
   mutation = mutation %>% 
     left_join(var_assignment)
-  
   
   # get mean CCF of each clone
   clone_CCF = mutation %>% 
@@ -111,46 +62,6 @@ clone_tree = function(patient,citup_dir,mf,nPoints,
     distinct(clone_id,cluster_id,cluster_size) %>% 
     group_by(clone_id) %>% 
     summarise(num_muts = sum(cluster_size))
-  
-  
-  # separate mut ID into gene name and mutation location
-  mutation = mutation %>% 
-    separate(mutation_id, into=c("gene", "mut_loc"), sep="_")
-  
-  
-  # inner join to get new mutation ID and Variant_Classification
-  mutation_new_ID = mutation %>% 
-    inner_join(vaf) 
-  
-  
-  # keep only mutations with coding definitions
-  mutation_new_ID = mutation_new_ID %>% 
-    filter(Variant_Classification %in% coding_def)
-  
-  
-  # keep only driver mutations 
-  mut_index = grepl(paste(drivers, collapse="$|"), 
-                    mutation_new_ID$Hugo_Symbol)
-  mutation_new_ID = mutation_new_ID[mut_index,]
-  
-  # get a list of unique driver mutations in each clone
-  clone_drivers = unique(mutation_new_ID[, c("mut_loc", "clone_id", "Hugo_Symbol","Chromosome"), ])
-  
-  
-  # Collapse multiple mutation
-  clone_drivers = clone_drivers %>% 
-    unite(col="mutation", c("Hugo_Symbol","Chromosome"), sep=":") %>% 
-    group_by(clone_id) %>% 
-    summarise(driver_num=sum(!is.na(mutation)),
-              mutation=paste(mutation, collapse="\n"))
-  
-  # driver annotation on the clonal tree
-  driver_annotation = data.frame(clone_id = 0:max(var_assignment$clone_id))
-  driver_annotation = cbind(driver_annotation, 
-                            clone_drivers[match(driver_annotation$clone_id, clone_drivers$clone_id), 
-                                          c("driver_num", "mutation")])
-  # Replace NA for driver num with 0 and mutation with empty string
-  driver_annotation = driver_annotation %>% replace_na(list(driver_num = 0, mutation=""))
   
   
   
@@ -167,22 +78,11 @@ clone_tree = function(patient,citup_dir,mf,nPoints,
   adjacency = rbind(c(-1,0), adjacency)
   adjacency_igraph = graph_from_edgelist(as.matrix(adjacency) + 2)
   
-  # annotate driver mutations on edge
-  E(adjacency_igraph)$mutations = driver_annotation[match(adjacency$V2, driver_annotation$clone_id),"mutation"]
-  
-  
   # Set vertices' names
   V(adjacency_igraph)$Clones = as.character(min(adjacency):max(adjacency))
   
   # Set root node name to none
   V(adjacency_igraph)$Clones[1] = ""
-  
-  
-  # get number of driver muts for each node
-  V(adjacency_igraph)$driver_num = driver_annotation[match(V(adjacency_igraph)$Clones, 
-                                                           driver_annotation$clone_id), 'driver_num']
-  V(adjacency_igraph)$driver_num[is.na(V(adjacency_igraph)$driver_num)] = 0
-  
   
   # number of mutations in each clone
   V(adjacency_igraph)$num_muts = clone_size$num_muts[match(V(adjacency_igraph)$Clones, 
@@ -200,8 +100,7 @@ clone_tree = function(patient,citup_dir,mf,nPoints,
     
     # Use white for the pseudo root node to hide it.
     scale_colour_manual(values = c("#FFFFFF", c25[2:length(V(adjacency_igraph))])) +
-    geom_edge_link(aes(label=mutations),
-                   hjust=0.5, vjust=1.2, show.legend = FALSE,edge_width = 1.5,
+    geom_edge_link(hjust=0.5, vjust=1.2, show.legend = FALSE,edge_width = 1.5,
                    label_alpha=1,label_size = 2.5, angle_calc = "along") +
     
     # size of the nodes (clones) is proportional to number of muts in that clone

@@ -1,0 +1,15 @@
+DE_NOVO_START_IN_FRAME
+DE_NOVO_START_OUT_FRAME
+Frame_Shift_Del
+Frame_Shift_Ins
+In_Frame_Del
+In_Frame_Ins
+Missense_Mutation
+Nonsense_Mutation
+Nonstop_Mutation
+Silent
+Splice_Site
+START_CODON_DEL
+START_CODON_INS
+START_CODON_SNP
+Translation_Start_Site
